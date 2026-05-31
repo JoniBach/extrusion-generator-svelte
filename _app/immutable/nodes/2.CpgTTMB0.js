@@ -4170,13 +4170,14 @@ void main() {
 			}
 			.panel {
 				width: 100%;
-				height: auto;
-				max-height: 55vh;
+				height: 50%;
+				max-height: 320px;
 				border-right: none;
 				border-top: 1px solid #ccc;
 			}
 			.panel-scroll {
-				max-height: calc(55vh - 110px);
+				min-height: 0;
+				padding-bottom: 1.5rem;
 			}
 			.panel-footer {
 				padding: 0.75rem 1rem;
