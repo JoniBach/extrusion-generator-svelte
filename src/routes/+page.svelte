@@ -152,6 +152,78 @@
 			edges = null;
 		};
 	});
+	function exportSTL() {
+		if (!mesh) return;
+		const geo = mesh.geometry;
+		const pos = geo.getAttribute('position');
+		const indices = geo.getIndex();
+
+		const count = indices ? indices.count / 3 : pos.count / 3;
+		const header = new Uint8Array(80);
+		header.set(new TextEncoder().encode('Exported from Svelte Extrusion Generator'), 0);
+
+		const buffer = new ArrayBuffer(80 + 4 + count * 50);
+		const view = new DataView(buffer);
+
+		new Uint8Array(buffer, 0, 80).set(header);
+		view.setUint32(80, count, true);
+
+		let offset = 84;
+		for (let i = 0; i < count; i++) {
+			const a = indices ? indices.array[i * 3] : i * 3;
+			const b = indices ? indices.array[i * 3 + 1] : i * 3 + 1;
+			const c = indices ? indices.array[i * 3 + 2] : i * 3 + 2;
+
+			const ax = pos.getX(a),
+				ay = pos.getY(a),
+				az = pos.getZ(a);
+			const bx = pos.getX(b),
+				by = pos.getY(b),
+				bz = pos.getZ(b);
+			const cx = pos.getX(c),
+				cy = pos.getY(c),
+				cz = pos.getZ(c);
+
+			const nx = (by - ay) * (cz - az) - (bz - az) * (cy - ay);
+			const ny = (bz - az) * (cx - ax) - (bx - ax) * (cz - az);
+			const nz = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+
+			view.setFloat32(offset, nx, true);
+			offset += 4;
+			view.setFloat32(offset, ny, true);
+			offset += 4;
+			view.setFloat32(offset, nz, true);
+			offset += 4;
+			view.setFloat32(offset, ax, true);
+			offset += 4;
+			view.setFloat32(offset, ay, true);
+			offset += 4;
+			view.setFloat32(offset, az, true);
+			offset += 4;
+			view.setFloat32(offset, bx, true);
+			offset += 4;
+			view.setFloat32(offset, by, true);
+			offset += 4;
+			view.setFloat32(offset, bz, true);
+			offset += 4;
+			view.setFloat32(offset, cx, true);
+			offset += 4;
+			view.setFloat32(offset, cy, true);
+			offset += 4;
+			view.setFloat32(offset, cz, true);
+			offset += 4;
+			view.setUint16(offset, 0, true);
+			offset += 2;
+		}
+
+		const blob = new Blob([buffer], { type: 'application/octet-stream' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'extrusion.stl';
+		a.click();
+		URL.revokeObjectURL(url);
+	}
 </script>
 
 <svelte:head>
@@ -240,6 +312,9 @@
 			<div class="buttons">
 				<button onclick={apply} disabled={!dirty}>Apply</button>
 				<button onclick={clear} disabled={!dirty}>Clear</button>
+			</div>
+			<div class="buttons" style="margin-top: 0.5rem;">
+				<button onclick={exportSTL}>Export STL</button>
 			</div>
 		</div>
 	</aside>
