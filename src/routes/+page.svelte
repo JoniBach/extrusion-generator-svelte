@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createExtrusion } from 'extrude-js';
+	import { createExtrusion, type ExtrusionProfile } from 'extrude-js';
 	import * as THREE from 'three';
 	import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -16,6 +16,83 @@
 		trapezoidBaseFromCenter: 6.34,
 		cornerRadius: 1.0
 	};
+
+	const presets: { name: string; profile: ExtrusionProfile }[] = [
+		{
+			name: 'Default',
+			profile: { ...defaults }
+		},
+
+		{
+			name: '1010',
+			profile: {
+				size: 10,
+				length: 100,
+				centerHoleDiameter: 2.5,
+				slotWidth: 3.0,
+				slotDepth: 0.9,
+				innerWidth: 6.0,
+				trapezoidBaseFromCenter: 3.2,
+				cornerRadius: 0.5
+			}
+		},
+
+		{
+			name: '1515',
+			profile: {
+				size: 15,
+				length: 100,
+				centerHoleDiameter: 3.3,
+				slotWidth: 4.0,
+				slotDepth: 1.2,
+				innerWidth: 9.0,
+				trapezoidBaseFromCenter: 4.8,
+				cornerRadius: 0.8
+			}
+		},
+
+		{
+			name: '2020',
+			profile: {
+				size: 20,
+				length: 100,
+				centerHoleDiameter: 4.2,
+				slotWidth: 5.3,
+				slotDepth: 1.55,
+				innerWidth: 12.0,
+				trapezoidBaseFromCenter: 6.35,
+				cornerRadius: 1.0
+			}
+		},
+
+		{
+			name: '3030',
+			profile: {
+				size: 30,
+				length: 100,
+				centerHoleDiameter: 6.8,
+				slotWidth: 8.2,
+				slotDepth: 2.0,
+				innerWidth: 18.0,
+				trapezoidBaseFromCenter: 9.5,
+				cornerRadius: 1.5
+			}
+		},
+
+		{
+			name: '4040',
+			profile: {
+				size: 40,
+				length: 100,
+				centerHoleDiameter: 8.1,
+				slotWidth: 8.2,
+				slotDepth: 2.2,
+				innerWidth: 24.0,
+				trapezoidBaseFromCenter: 12.5,
+				cornerRadius: 2.0
+			}
+		}
+	];
 
 	let profile = $state({ ...defaults });
 
@@ -53,6 +130,10 @@
 
 	let applied = $state({ ...defaults });
 	const dirty = $derived((Object.keys(profile) as Key[]).some((k) => profile[k] !== applied[k]));
+
+	function loadPreset(p: (typeof presets)[number]) {
+		profile = { ...p.profile };
+	}
 
 	function apply() {
 		if (!mesh || !edges) return;
@@ -260,6 +341,7 @@
 			padding: 0.5rem 1rem;
 			border-top: 1px solid #ccc;
 			background: inherit;
+			flex-shrink: 0;
 		}
 		.field {
 			display: block;
@@ -276,15 +358,45 @@
 		.buttons button {
 			flex: 1;
 		}
+		.presets {
+			margin-top: 1rem;
+		}
+		.presets-label {
+			margin: 0 0 0.4rem 0;
+			font-size: 0.75rem;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: #888;
+		}
+		.preset-buttons {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.4rem;
+		}
+		.preset-btn {
+			flex: 0 0 auto;
+			padding: 0.25rem 0.6rem;
+			font-size: 0.8rem;
+			cursor: pointer;
+		}
 		@media (max-width: 600px) {
 			.layout {
 				flex-direction: column-reverse;
+				height: 100dvh;
 			}
 			.panel {
 				width: 100%;
-				height: 50vh;
+				height: 50%;
+				max-height: 320px;
 				border-right: none;
 				border-top: 1px solid #ccc;
+			}
+			.panel-scroll {
+				min-height: 0;
+				padding-bottom: 1.5rem;
+			}
+			.panel-footer {
+				padding: 0.75rem 1rem;
 			}
 		}
 	</style>
@@ -307,6 +419,14 @@
 					/>
 				</label>
 			{/each}
+			<div class="presets">
+				<p class="presets-label">Presets</p>
+				<div class="preset-buttons">
+					{#each presets as preset (preset.name)}
+						<button class="preset-btn" onclick={() => loadPreset(preset)}>{preset.name}</button>
+					{/each}
+				</div>
+			</div>
 		</div>
 		<div class="panel-footer">
 			<div class="buttons">
